@@ -3,8 +3,8 @@
 {% load adminmedia %}
 
 {% block extrahead %}{{ block.super }}
-<style type="text/css">
-</style>
+{{ user_form.media }}
+{{ group_form.media }}
 {% endblock %}
 
 {% block breadcrumbs %}{% if not is_popup %}
