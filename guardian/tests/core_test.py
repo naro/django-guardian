@@ -11,12 +11,14 @@ from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.shortcuts import assign
+from guardian.utils import get_authenticated_virtual_group
 
 class ObjectPermissionTestCase(TestCase):
 
     def setUp(self):
         self.group, created = Group.objects.get_or_create(name='jackGroup')
         self.user, created = User.objects.get_or_create(username='jack')
+        self.user.set_password('secret')
         self.user.groups.add(self.group)
         self.ctype = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
@@ -156,3 +158,13 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
                 GroupObjectPermission.objects.assign(perm, self.group, obj)
             self.assertEqual(sorted(perms), sorted(check.get_perms(obj)))
 
+    def test_auth_virtual_group(self):
+        obj = ContentType.objects.create(name='ct1', model='foo',
+            app_label='guardian-tests')
+        auth_group = get_authenticated_virtual_group()
+        GroupObjectPermission.objects.assign('change_contenttype', auth_group, obj)
+        # be sure user does not have the perm
+        UserObjectPermission.objects.remove_perm('change_contenttype', self.user, obj)
+
+        self.failIf(self.anonymous_user.has_perm('change_contenttype', obj))
+        self.failUnless(self.user.has_perm('change_contenttype', obj))
