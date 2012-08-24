@@ -1,6 +1,7 @@
 from itertools import chain
 
 from django.conf import settings
+from guardian.conf import settings as guardian_settings
 from django.contrib.auth import models as auth_app
 from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import User, Group, Permission, AnonymousUser
@@ -11,7 +12,6 @@ from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.shortcuts import assign
-from guardian.utils import get_authenticated_virtual_group
 
 class ObjectPermissionTestCase(TestCase):
 
@@ -161,10 +161,31 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
     def test_auth_virtual_group(self):
         obj = ContentType.objects.create(name='ct1', model='foo',
             app_label='guardian-tests')
-        auth_group = get_authenticated_virtual_group()
+        auth_group = self.auth_virtual_group
         GroupObjectPermission.objects.assign('change_contenttype', auth_group, obj)
         # be sure user does not have the perm
         UserObjectPermission.objects.remove_perm('change_contenttype', self.user, obj)
 
         self.failIf(self.anonymous_user.has_perm('change_contenttype', obj))
         self.failUnless(self.user.has_perm('change_contenttype', obj))
+
+    def test_inherited_permissions(self):
+        obj = ContentType.objects.create(name='ct1', model='foo',
+            app_label='guardian-tests')
+
+        setattr(guardian_settings, 'INHERIT_ANONYMOUS_PERMISSIONS', False)
+        self.failIf(self.anonymous_user.has_perm('change_contenttype', obj))
+        self.failIf(self.user.has_perm('change_contenttype', obj))
+
+        UserObjectPermission.objects.assign('change_contenttype', self.anonymous_user, obj)
+
+        self.failUnless(self.anonymous_user.has_perm('change_contenttype', obj))
+        self.failIf(self.user.has_perm('change_contenttype', obj))
+
+        # set inheriting on
+        setattr(guardian_settings, 'INHERIT_ANONYMOUS_PERMISSIONS', True)
+        self.failUnless(self.anonymous_user.has_perm('change_contenttype', obj))
+        self.failUnless(self.user.has_perm('change_contenttype', obj))
+
+        # cleanup to default
+        setattr(guardian_settings, 'INHERIT_ANONYMOUS_PERMISSIONS', False)

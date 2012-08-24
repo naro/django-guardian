@@ -14,6 +14,7 @@ if AUTHENTICATED_VIRTUAL_GROUP_ID is None:
         "AUTHENTICATED_VIRTUAL_GROUP_ID at your settings module")
 
 AUTHENTICATED_VIRTUAL_GROUP_NAME = getattr(settings, 'AUTHENTICATED_VIRTUAL_GROUP_NAME', 'Logged-in users (virtual group)')
+INHERIT_ANONYMOUS_PERMISSIONS = getattr(settings, 'INHERIT_ANONYMOUS_PERMISSIONS', False)
 
 RENDER_403 = getattr(settings, 'GUARDIAN_RENDER_403', False)
 TEMPLATE_403 = getattr(settings, 'GUARDIAN_TEMPLATE_403', '403.html')

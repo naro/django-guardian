@@ -1,7 +1,7 @@
 """
 Convenient shortcuts to manage or check object permissions.
 """
-from django.conf import settings
+from guardian.conf import settings as guardian_settings
 from django.contrib.auth.models import Permission, User, Group, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -343,8 +343,13 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         return queryset
 
     # Now we should extract list of pk values for which we would filter queryset
+    user_q = Q(user=user)
+    if not isinstance(user, AnonymousUser) and guardian_settings.INHERIT_ANONYMOUS_PERMISSIONS:
+        user_q = user_q | \
+             Q(user=guardian_settings.ANONYMOUS_USER_ID)
+
     user_obj_perms = UserObjectPermission.objects\
-        .filter(user=user)\
+        .filter(user_q)\
         .filter(permission__content_type=ctype)\
         .filter(permission__codename__in=codenames)\
         .values_list('object_pk', 'permission__codename')
@@ -352,7 +357,9 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     if use_groups:
         user_q = Q(group__user=user)
         if not isinstance(user, AnonymousUser):
-            user_q = user_q | Q(group=settings.AUTHENTICATED_VIRTUAL_GROUP_ID)
+            # check if permission is assigned to Logged-in Group
+            user_q = user_q | \
+                     Q(group=guardian_settings.AUTHENTICATED_VIRTUAL_GROUP_ID)
         groups_obj_perms = GroupObjectPermission.objects\
             .filter(user_q)\
             .filter(permission__content_type=ctype)\

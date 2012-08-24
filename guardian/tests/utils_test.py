@@ -3,6 +3,7 @@ from django.contrib.auth.models import User, Group, AnonymousUser
 
 from guardian.tests.core_test import ObjectPermissionTestCase
 from guardian.utils import get_anonymous_user, get_identity
+from guardian.utils import get_authenticated_virtual_group
 from guardian.exceptions import NotUserNorGroup
 
 class GetAnonymousUserTest(TestCase):
@@ -10,6 +11,12 @@ class GetAnonymousUserTest(TestCase):
     def test(self):
         anon = get_anonymous_user()
         self.assertTrue(isinstance(anon, User))
+
+class GetAuthVirtualGroupTest(TestCase):
+
+    def test(self):
+        group = get_authenticated_virtual_group()
+        self.assertTrue(isinstance(group, Group))
 
 class GetIdentityTest(ObjectPermissionTestCase):
 
@@ -33,4 +40,3 @@ class GetIdentityTest(ObjectPermissionTestCase):
         self.assertRaises(NotUserNorGroup, get_identity, 1)
         self.assertRaises(NotUserNorGroup, get_identity, "User")
         self.assertRaises(NotUserNorGroup, get_identity, User)
-

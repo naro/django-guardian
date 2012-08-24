@@ -1,12 +1,12 @@
 from itertools import chain
 
-from django.conf import settings
+from guardian.conf import settings as guardian_settings
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, F
 
 from guardian.utils import get_identity
-from guardian.utils import get_authenticated_virtual_group
+
 
 class ObjectPermissionChecker(object):
     """
@@ -73,11 +73,18 @@ class ObjectPermissionChecker(object):
                          Q(groupobjectpermission__content_type=F('content_type'),
                             groupobjectpermission__group__user=self.user,
                             groupobjectpermission__object_pk=obj.pk)
-                if self.user.pk != settings.ANONYMOUS_USER_ID:
+                if self.user.pk != guardian_settings.ANONYMOUS_USER_ID:
+                    # check if permission is assigned to Logged-in Group
+                    # or if the permission is assigned to Anonymous user
                     user_q = user_q | \
                         Q(groupobjectpermission__content_type=F('content_type'),
-                            groupobjectpermission__group=settings.AUTHENTICATED_VIRTUAL_GROUP_ID,
+                            groupobjectpermission__group=guardian_settings.AUTHENTICATED_VIRTUAL_GROUP_ID,
                             groupobjectpermission__object_pk=obj.pk)
+                    if guardian_settings.INHERIT_ANONYMOUS_PERMISSIONS:
+                        user_q = user_q | \
+                            Q(userobjectpermission__content_type=F('content_type'),
+                                userobjectpermission__user=guardian_settings.ANONYMOUS_USER_ID,
+                                 userobjectpermission__object_pk=obj.pk)
                 perms = list(set(chain(*Permission.objects
                     .filter(content_type=ctype)
                     .filter(user_q)
@@ -99,4 +106,3 @@ class ObjectPermissionChecker(object):
         """
         ctype = ContentType.objects.get_for_model(obj)
         return (ctype.id, obj.pk)
-

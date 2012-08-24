@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
 from django.test import TestCase
 
+from guardian.conf import settings as guardian_settings
 from guardian.shortcuts import get_perms_for_model
 from guardian.core import ObjectPermissionChecker
 from guardian.shortcuts import assign
@@ -534,6 +535,23 @@ class GetObjectsForUser(TestCase):
         self.assertEqual(
             set(objects.values_list('id', flat=True)),
             set([1, 2, 4, 5]))
+
+    def test_inherited_anonymous_perms(self):
+        anon = User.objects.get(pk=guardian_settings.ANONYMOUS_USER_ID)
+        obj = ContentType.objects.create(name='ct1', model='foo',
+            app_label='guardian-tests')
+
+        setattr(guardian_settings, 'INHERIT_ANONYMOUS_PERMISSIONS', False)
+        assign('contenttypes.change_contenttype', anon, obj)
+        self.failUnless(obj in get_objects_for_user(anon, 'contenttypes.change_contenttype'))
+        self.failIf(obj in get_objects_for_user(self.user, 'contenttypes.change_contenttype'))
+
+        setattr(guardian_settings, 'INHERIT_ANONYMOUS_PERMISSIONS', True)
+        self.failUnless(obj in get_objects_for_user(anon, 'contenttypes.change_contenttype'))
+        self.failUnless(obj in get_objects_for_user(self.user, 'contenttypes.change_contenttype'))
+        # cleanup to default
+        setattr(guardian_settings, 'INHERIT_ANONYMOUS_PERMISSIONS', False)
+
 
 class GetObjectsForGroup(TestCase):
     """
