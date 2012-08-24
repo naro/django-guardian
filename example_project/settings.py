@@ -86,6 +86,7 @@ AUTHENTICATION_BACKENDS = (
 )
 
 ANONYMOUS_USER_ID = -1
+AUTHENTICATED_VIRTUAL_GROUP_ID = -1
 
 # Neede as some models (located at guardian/tests/models.py)
 # are not migrated for tests

@@ -1,10 +1,11 @@
 from itertools import chain
 
+from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, F
 
-from guardian.utils import get_identity, get_anonymous_user
+from guardian.utils import get_identity
 from guardian.utils import get_authenticated_virtual_group
 
 class ObjectPermissionChecker(object):
@@ -72,10 +73,10 @@ class ObjectPermissionChecker(object):
                          Q(groupobjectpermission__content_type=F('content_type'),
                             groupobjectpermission__group__user=self.user,
                             groupobjectpermission__object_pk=obj.pk)
-                if self.user != get_anonymous_user():
+                if self.user.pk != settings.ANONYMOUS_USER_ID:
                     user_q = user_q | \
                         Q(groupobjectpermission__content_type=F('content_type'),
-                            groupobjectpermission__group=get_authenticated_virtual_group(),
+                            groupobjectpermission__group=settings.AUTHENTICATED_VIRTUAL_GROUP_ID,
                             groupobjectpermission__object_pk=obj.pk)
                 perms = list(set(chain(*Permission.objects
                     .filter(content_type=ctype)

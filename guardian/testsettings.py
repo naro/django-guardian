@@ -4,6 +4,7 @@ DEBUG = False
 
 ANONYMOUS_USER_ID = -1
 AUTHENTICATED_VIRTUAL_GROUP_ID = -1
+AUTHENTICATED_VIRTUAL_GROUP_NAME = 'Logged-in users'
 
 INSTALLED_APPS = (
     'django.contrib.auth',

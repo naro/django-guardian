@@ -23,6 +23,9 @@ class ObjectPermissionTestCase(TestCase):
         self.anonymous_user, created = User.objects.get_or_create(
             id=settings.ANONYMOUS_USER_ID,
             username='AnonymousUser')
+        self.auth_virtual_group, created = Group.objects.get_or_create(
+            id=settings.AUTHENTICATED_VIRTUAL_GROUP_ID,
+            name=settings.AUTHENTICATED_VIRTUAL_GROUP_NAME)
 
 
 class ObjectPermissionCheckerTest(ObjectPermissionTestCase):

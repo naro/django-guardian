@@ -1,6 +1,7 @@
 """
 Convenient shortcuts to manage or check object permissions.
 """
+from django.conf import settings
 from django.contrib.auth.models import Permission, User, Group, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -10,7 +11,7 @@ from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import WrongAppError
 from guardian.models import UserObjectPermission, GroupObjectPermission
-from guardian.utils import get_identity, get_authenticated_virtual_group
+from guardian.utils import get_identity
 from itertools import groupby
 
 def assign(perm, user_or_group, obj=None):
@@ -351,7 +352,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     if use_groups:
         user_q = Q(group__user=user)
         if not isinstance(user, AnonymousUser):
-            user_q = user_q | Q(group=get_authenticated_virtual_group())
+            user_q = user_q | Q(group=settings.AUTHENTICATED_VIRTUAL_GROUP_ID)
         groups_obj_perms = GroupObjectPermission.objects\
             .filter(user_q)\
             .filter(permission__content_type=ctype)\
