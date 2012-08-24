@@ -7,6 +7,14 @@ if ANONYMOUS_USER_ID is None:
         "ObjectPermissionBackend authorization backend you have to configure "
         "ANONYMOUS_USER_ID at your settings module")
 
+AUTHENTICATED_VIRTUAL_GROUP_ID = getattr(settings, 'AUTHENTICATED_VIRTUAL_GROUP_ID', None)
+if AUTHENTICATED_VIRTUAL_GROUP_ID is None:
+    raise ImproperlyConfigured("In order to use django-guardian's "
+        "ObjectPermissionBackend authorization backend you have to configure "
+        "AUTHENTICATED_VIRTUAL_GROUP_ID at your settings module")
+
+AUTHENTICATED_VIRTUAL_GROUP_NAME = getattr(settings, 'AUTHENTICATED_VIRTUAL_GROUP_NAME', 'Logged-in users (virtual group)')
+
 RENDER_403 = getattr(settings, 'GUARDIAN_RENDER_403', False)
 TEMPLATE_403 = getattr(settings, 'GUARDIAN_TEMPLATE_403', '403.html')
 RAISE_403 = getattr(settings, 'GUARDIAN_RAISE_403', False)

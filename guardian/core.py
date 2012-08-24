@@ -4,7 +4,8 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, F
 
-from guardian.utils import get_identity
+from guardian.utils import get_identity, get_anonymous_user
+from guardian.utils import get_authenticated_virtual_group
 
 class ObjectPermissionChecker(object):
     """
@@ -65,15 +66,20 @@ class ObjectPermissionChecker(object):
                     .filter(content_type=ctype)
                     .values_list("codename")))
             elif self.user:
+                user_q = Q(userobjectpermission__content_type=F('content_type'),
+                            userobjectpermission__user=self.user,
+                            userobjectpermission__object_pk=obj.pk) | \
+                         Q(groupobjectpermission__content_type=F('content_type'),
+                            groupobjectpermission__group__user=self.user,
+                            groupobjectpermission__object_pk=obj.pk)
+                if self.user != get_anonymous_user():
+                    user_q = user_q | \
+                        Q(groupobjectpermission__content_type=F('content_type'),
+                            groupobjectpermission__group=get_authenticated_virtual_group(),
+                            groupobjectpermission__object_pk=obj.pk)
                 perms = list(set(chain(*Permission.objects
                     .filter(content_type=ctype)
-                    .filter(
-                        Q(userobjectpermission__content_type=F('content_type'),
-                            userobjectpermission__user=self.user,
-                            userobjectpermission__object_pk=obj.pk) |
-                        Q(groupobjectpermission__content_type=F('content_type'),
-                            groupobjectpermission__group__user=self.user,
-                            groupobjectpermission__object_pk=obj.pk))
+                    .filter(user_q)
                     .values_list("codename"))))
             else:
                 perms = list(set(chain(*Permission.objects

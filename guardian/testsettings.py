@@ -3,6 +3,7 @@ import os
 DEBUG = False
 
 ANONYMOUS_USER_ID = -1
+AUTHENTICATED_VIRTUAL_GROUP_ID = -1
 
 INSTALLED_APPS = (
     'django.contrib.auth',

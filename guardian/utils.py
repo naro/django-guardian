@@ -33,6 +33,14 @@ def get_anonymous_user():
     return User.objects.get(id=guardian_settings.ANONYMOUS_USER_ID)
 
 
+def get_authenticated_virtual_group():
+    """
+    Returns ``Group`` instance depending on
+    ``AUTHENTICATED_VIRTUAL_GROUP_ID`` configuration.
+    """
+    return Group.objects.get(id=guardian_settings.AUTHENTICATED_VIRTUAL_GROUP_ID)
+
+
 def get_identity(identity):
     """
     Returns (user_obj, None) or (None, group_obj) tuple depending on what is
